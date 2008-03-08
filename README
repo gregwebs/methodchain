@@ -1,0 +1,85 @@
+== Summary
+methodchain - ruby helpers for method chaining: tap, then, else
+Easy ways to navigate around nil without creating local variables.
+
+== Author and License
+Copyright (c) 2008 Greg Weber, http://gregweber.info
+Licensed under the MIT license
+
+== Example
+= tap
+if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
+
+OLD WAY (still valid with this tap)
+  [1].tap {|arr| arr.compact!}.first # => 1
+NEW WAY
+  [1].tap(:compact!).first # => 1
+
+= #then and #else
+OLD WAY
+  name = person ? person.name : nil
+
+NEW WaY
+  name = person.then {|p| p.name}
+
+not a huge savings. But sometimes the person variable is actually a function call, and then we must save it in a variable first.
+
+OLD WAY
+  location = Location.find(:first, ...)
+  @phone = location && location.phone
+
+NEW WaY
+  @phone = Location.find(:first, ...).then {phone}
+  here we have reduced a line of code and removed a local variable
+
+OLD WAY
+  if(customer && customer.order && customer.order.id == new_customer_id)
+    'success'
+  else
+    'fail'
+  end
+
+NEW WaY
+  customer.then {order}.then {id == new_customer_id}.then('success').else('fail')
+
+Here we have removed one call to order and reduced the code to a one-liner.  There is also an equivalent block form
+  customer.then {order}.then {id == new_customer_id}.then do |o|
+    'success'
+  end.else do
+    'fail'
+  end
+
+== Usage
+  require 'rubygems'
+
+=== import all MethodChain methods into Object
+
+  require 'methodchain'
+
+=== selectively import MethodChain methods
+
+then_else will load just the then and else methods and not the tap method
+
+  require 'methodchain/then_else'
+
+not_included will load the MethodChain module without including it anywhere.
+
+  require 'methodchain/not_included'
+
+== Implementation
+a helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
+
+== Install
+gem install methodchain
+
+== Source
+=== browser
+http://github.com/gregwebs/methodchain/tree/master
+=== repository
+git clone git://github.com/gregwebs/methodchain.git
+
+== Homepage
+http://gregweber.info/projects/methodchain.html
+
+== RDoc documentation
+included with gem

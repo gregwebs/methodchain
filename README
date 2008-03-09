@@ -7,7 +7,7 @@ Copyright (c) 2008 Greg Weber, http://gregweber.info
 Licensed under the MIT license
 
 == Example
-= tap
+==== tap
 if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
 
 OLD WAY (still valid with this tap)
@@ -15,7 +15,7 @@ OLD WAY (still valid with this tap)
 NEW WAY
   [1].tap(:compact!).first # => 1
 
-= #then and #else
+==== #then and #else
 OLD WAY
   name = person ? person.name : nil
 
@@ -58,16 +58,14 @@ Here we have removed one call to order and reduced the code to a one-liner.  The
 
 === selectively import MethodChain methods
 
-then_else will load just the then and else methods and not the tap method
-
-  require 'methodchain/then_else'
-
-not_included will load the MethodChain module without including it anywhere.
-
   require 'methodchain/not_included'
 
+not_included will load the MethodChain module without including it anywhere.
+Already have your own version of tap? use the module-import gem to decide what to include
+
 == Implementation
-a helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
+  * There are no proxy objects, these are simply function calls, so it should be fast.
+  * A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
 
 == Install
 gem install methodchain

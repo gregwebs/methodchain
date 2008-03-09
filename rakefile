@@ -3,6 +3,7 @@ desc "test"
 task :test do
   Dir[ 'spec/*' ].each do |file|
     puts `spec #{file}`
+    exit $?.exitstatus if $?.exitstatus != 0
   end
 end
 
@@ -26,12 +27,12 @@ namespace :readme do
     require 'hpricot'
     doc = open( 'doc/files/README.html' ) { |f| Hpricot(f) }
     # find example code
-    ex = doc.at('#description').search('pre').select {|elem| elem.inner_html =~ /class /}.first
-    if ex
-      ex.swap("<coderay lang='ruby'>#{ex.inner_html}</coderay>")
+    doc.at('#description').search('pre').
+      select {|elem| elem.inner_html =~ /class |module /}.each do |ex|
+      # add coderay and undo what rdoc has done in the example code
+      ex.swap("<coderay lang='ruby'>#{ex.inner_html.gsub('&quot;', '"').gsub('&gt;','>')}</coderay>")
     end
-    # undo what rdoc has done in the example code
-    puts doc.at('#description').to_html.gsub('&quot;', '"')
+    puts doc.at('#description').to_html
   end
 end
 

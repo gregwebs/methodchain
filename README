@@ -64,8 +64,8 @@ not_included will load the MethodChain module without including it anywhere.
 Already have your own version of tap? use the module-import gem to decide what to include
 
 == Implementation
-  * There are no proxy objects, these are simply function calls, so it should be fast.
-  * A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
+* There are no proxy objects, these are simply function calls, so it should be fast.
+* A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
 
 == Install
 gem install methodchain

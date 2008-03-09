@@ -1,12 +1,12 @@
 == Summary
-methodchain - ruby helpers for method chaining: tap, then, else
+methodchain - ruby helpers for method chaining: chain, tap, then, else
 Easy ways to navigate around nil without creating local variables.
 
 == Author and License
 Copyright (c) 2008 Greg Weber, http://gregweber.info
 Licensed under the MIT license
 
-== Example
+== Examples
 ==== tap
 if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
 
@@ -17,37 +17,55 @@ NEW WAY
 
 ==== #then and #else
 OLD WAY
+
   name = person ? person.name : nil
 
 NEW WaY
+
   name = person.then {|p| p.name}
 
 not a huge savings. But sometimes the person variable is actually a function call, and then we must save it in a variable first.
 
 OLD WAY
+
   location = Location.find(:first, ...)
   @phone = location && location.phone
 
 NEW WaY
-  @phone = Location.find(:first, ...).then {phone}
-  here we have reduced a line of code and removed a local variable
 
+  @phone = Location.find(:first, ...).then {phone}
+  
+here we have reduced a line of code and removed a local variable
+#then and #else can return a default value instead of evaluating a block
+'a'.then('b') #=> 'b'
+nil.then('b').else('c') #=> 'c'
+
+=== #chain
 OLD WAY
-  if(customer && customer.order && customer.order.id == new_customer_id)
-    'success'
-  else
-    'fail'
-  end
+
+  customer && customer.order && customer.order.id
 
 NEW WaY
-  customer.then {order}.then {id == new_customer_id}.then('success').else('fail')
 
-Here we have removed one call to order and reduced the code to a one-liner.  There is also an equivalent block form
-  customer.then {order}.then {id == new_customer_id}.then do |o|
-    'success'
-  end.else do
-    'fail'
+  customer.chain(:order, :id)
+ 
+note that this is equivalent to
+
+  customer.then {order}.then {id}
+
+=== chain - Custom guards and multiple argumentes
+OLD WAY - guarding against zero
+
+  result = if value == 0 then value else
+    tmp = calc(value)
+
+    if tmp == 0 then tmp else
+      more_calc(tmp, 20)
+    end
   end
+
+NEW WAY
+  value.chain(:calc, [:more_calc, 20]) {|s| s == 0 }
 
 == Usage
   require 'rubygems'
@@ -64,8 +82,8 @@ not_included will load the MethodChain module without including it anywhere.
 Already have your own version of tap? use the module-import gem to decide what to include
 
 == Implementation
-* There are no proxy objects, these are simply function calls, so it should be fast.
-* A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the second form is called using instance_eval.
+* There are no proxy objects and no use of method_missing- these are simply function calls, so it should be fast.
+* A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
 
 == Install
 gem install methodchain

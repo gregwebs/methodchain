@@ -1,5 +1,16 @@
 # :main: README
 module MethodChain
+  def chain *methods, &guard
+    return self if methods.empty? or not(
+      (block_given? ? (self_eval &guard) : self))
+
+    case(meth = methods.shift)
+    when Symbol then __send__ meth
+    when Array  then __send__ *meth
+    else             self_eval &meth
+    end.chain(*methods, &guard)
+  end
+
   def self_eval &block
     case block.arity
     # ruby bug for -1

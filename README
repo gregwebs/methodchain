@@ -7,65 +7,77 @@ Copyright (c) 2008 Greg Weber, http://gregweber.info
 Licensed under the MIT license
 
 == Examples
-==== tap
+=== ##tap
 if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
 
-OLD WAY (still valid with this tap)
+==== OLD WAY
+  arr = [1]
+  arr.compact! # => nil
+  arr.first # => 1
+
+==== Normal Tap (still valid)
   [1].tap {|arr| arr.compact!}.first # => 1
-NEW WAY
+
+==== NEW Tap
   [1].tap(:compact!).first # => 1
 
-==== #then and #else
-OLD WAY
-
+=== ##then and ##else
+==== OLD WAY
+  person = nil
   name = person ? person.name : nil
 
-NEW WaY
-
+==== NEW WaY
   name = person.then {|p| p.name}
 
 not a huge savings. But sometimes the person variable is actually a function call, and then we must save it in a variable first.
 
-OLD WAY
+==== OLD WAY
+  def find(*args)
+    # do some expensive database queries
+  end
 
-  location = Location.find(:first, ...)
-  @phone = location && location.phone
+  location = find(:first)
+  @phone = location && location.phone   # => nil
 
-NEW WaY
-
-  @phone = Location.find(:first, ...).then {phone}
+==== NEW WaY
+  @phone = find(:first).then {phone}   # => nil
   
-here we have reduced a line of code and removed a local variable
+We have reduced a line of code and removed a local variable.
 #then and #else can return a default value instead of evaluating a block
-'a'.then('b') #=> 'b'
-nil.then('b').else('c') #=> 'c'
 
-=== #chain
-OLD WAY
+  'a'.then('b') #=> 'b'
+  nil.then('b').else('c') #=> 'c'
 
+=== ##chain
+==== OLD WAY
+  customer = nil
   customer && customer.order && customer.order.id
 
-NEW WaY
-
+==== NEW WaY
   customer.chain(:order, :id)
  
 note that this is equivalent to
 
   customer.then {order}.then {id}
 
-=== chain - Custom guards and multiple argumentes
-OLD WAY - guarding against zero
+=== ##chain - Custom guards, multiple arguments, and procs
+==== OLD WAY - guarding against zero
+  value = 0
 
   result = if value == 0 then value else
-    tmp = calc(value)
+    tmp = value.abs
 
     if tmp == 0 then tmp else
-      more_calc(tmp, 20)
+      tmp * 20
     end
   end
+  result # => 0
 
-NEW WAY
-  value.chain(:calc, [:more_calc, 20]) {|s| s == 0 }
+==== NEW WAY
+  value.chain(:abs, [:*, 20]) {|s| s == 0 }   # => 0
+
+procs can be used, so this is equivalent to
+  value.chain(:abs, lambda {|n| n * 20 }) {|s| s == 0 } # => 0
 
 == Usage
   require 'rubygems'
@@ -83,7 +95,7 @@ Already have your own version of tap? use the module-import gem to decide what t
 
 == Implementation
 * There are no proxy objects and no use of method_missing- these are simply function calls, so it should be fast.
-* A helper method called self_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
+* A helper method called yield_or_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
 
 == Install
 gem install methodchain

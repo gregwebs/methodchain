@@ -1,9 +1,48 @@
 project = "methodchain"
-desc "test"
-task :test do
+
+def exit_msg(msg, code=1)
+  puts msg
+  exit(code)
+end
+def run command
+  res = `#{command}`
+  exit_msg res, $?.exitstatus if $?.exitstatus != 0
+  res
+end
+def __DIR__; "#{File.dirname(__FILE__)}" end
+class IO
+  def self.write( file, str )
+    self.open( file, 'w' ) { |fh| fh.print str }
+  end
+  def self.read_write( file, write_file=file )
+    self.write(write_file, (yield( self.read( file ))))
+  end
+end
+
+desc "test run all tests"
+task :test => [:spec, 'readme:test']
+
+desc "run specs"
+task :spec do
   Dir[ 'spec/*' ].each do |file|
-    puts `spec #{file}`
-    exit $?.exitstatus if $?.exitstatus != 0
+    (puts (run "spec #{file}"))
+  end
+end
+
+require 'rubygems'
+require 'spec/rake/spectask'
+desc "Run all examples with RCov"
+Spec::Rake::SpecTask.new('rcov') do |t|
+  t.spec_files = ['spec/*.rb']
+  t.rcov = true
+  t.rcov_opts = ['--exclude', 'spec']
+end
+
+namespace :rcov do
+  require 'spec/rake/verify_rcov'
+  RCov::VerifyTask.new(:verify => :spec) do |t|
+    t.threshold = 100 # Make sure you have rcov 0.7 or higher!
+    t.index_html = 'coverage/lib-methodchain-not_included_rb.html'
   end
 end
 
@@ -23,16 +62,41 @@ end
 
 namespace :readme do
   desc "create html for website using coderay, use --silent option"
-  task :html => :rdoc do
+  task :html do
+    rm_rf 'doc'
+    `rdoc --quiet README`
     require 'hpricot'
     doc = open( 'doc/files/README.html' ) { |f| Hpricot(f) }
     # find example code
-    doc.at('#description').search('pre').
-      select {|elem| elem.inner_html =~ /class |module /}.each do |ex|
+    doc.at('#description').search('pre').each do |ex|
+      #select {|elem| elem.inner_html =~ /class |module /}.each do |ex|
       # add coderay and undo what rdoc has done in the example code
       ex.swap("<coderay lang='ruby'>#{ex.inner_html.gsub('&quot;', '"').gsub('&gt;','>')}</coderay>")
     end
     puts doc.at('#description').to_html
+  end
+
+  # run README through xmp
+  desc "run README code through xmp filter"
+  task :test do
+    # grab example code from README
+    tmpdir = __DIR__ + '/tmp'
+    mkdir tmpdir unless File.directory? tmpdir
+    example_file = "#{File.expand_path(tmpdir)}/example.rb"
+
+    File.write(example_file, (
+      File.read("#{__DIR__}/lib/methodchain/not_included.rb") <<
+      "class Object; include MethodChain end\n" <<
+      File.readlines('README').grep(/^  / ).
+        reject {|l| l =~ /^\s*require/ or l.include?('Error')}.
+          join ))
+
+    command = "ruby ../bin/xmpfilter -c #{example_file}"
+    Dir.chdir '/home/greg/src/head/lib' do
+      run "#{command}"
+    end
+    rm_rf 'tmp'
+    puts "README code successfully evaluated"
   end
 end
 
@@ -42,7 +106,7 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
   s.name = project
   s.rubyforge_project = project
-  s.version = "0.1.0"
+  s.version = "0.2.0"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{project}"

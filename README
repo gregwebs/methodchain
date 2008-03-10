@@ -10,28 +10,28 @@ Licensed under the MIT license
 === ##tap
 if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
 
-==== OLD WAY
+==== old way
   arr = [1]
   arr.compact! # => nil
   arr.first # => 1
 
-==== Normal Tap (still valid)
+==== normal ##tap (still valid)
   [1].tap {|arr| arr.compact!}.first # => 1
 
-==== NEW Tap
+==== new ##tap
   [1].tap(:compact!).first # => 1
 
 === ##then and ##else
-==== OLD WAY
+==== old way
   person = nil
   name = person ? person.name : nil
 
-==== NEW WaY
+==== new way
   name = person.then {|p| p.name}
 
 not a huge savings. But sometimes the person variable is actually a function call, and then we must save it in a variable first.
 
-==== OLD WAY
+==== old way
   def find(*args)
     # do some expensive database queries
   end
@@ -39,7 +39,7 @@ not a huge savings. But sometimes the person variable is actually a function cal
   location = find(:first)
   @phone = location && location.phone   # => nil
 
-==== NEW WaY
+==== new way
   @phone = find(:first).then {phone}   # => nil
   
 We have reduced a line of code and removed a local variable.
@@ -49,11 +49,11 @@ We have reduced a line of code and removed a local variable.
   nil.then('b').else('c') #=> 'c'
 
 === ##chain
-==== OLD WAY
+==== old way
   customer = nil
   customer && customer.order && customer.order.id
 
-==== NEW WaY
+==== new way
   customer.chain(:order, :id)
  
 note that this is equivalent to
@@ -61,7 +61,7 @@ note that this is equivalent to
   customer.then {order}.then {id}
 
 === ##chain - Custom guards, multiple arguments, and procs
-==== OLD WAY - guarding against zero
+==== old way - guarding against zero
   value = 0
 
   result = if value == 0 then value else
@@ -73,7 +73,7 @@ note that this is equivalent to
   end
   result # => 0
 
-==== NEW WAY
+==== new way
   value.chain(:abs, [:*, 20]) {|s| s == 0 }   # => 0
 
 procs can be used, so this is equivalent to

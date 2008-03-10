@@ -1,17 +1,32 @@
 # :main: README
 module MethodChain
+
+  # send a method, evaluate a block, but always return self
+  def tap meth=nil, &block
+    __send__ meth if meth
+    yield_or_eval(&block) if block_given?
+    self
+  end
+
+  # method chaining with a guard.
+  # If no guard block is given then guard against nil and false
+  # *methods = [method] where
+  #   method = Message | Code
+  #   Message = Symbol | [Symbol, *arguments]
+  #   Code.to_proc = Proc
   def chain *methods, &guard
     return self if methods.empty? or not(
-      (block_given? ? (self_eval &guard) : self))
+      (block_given? ? (yield_or_eval(&guard)) : self))
 
     case(meth = methods.shift)
     when Symbol then __send__ meth
-    when Array  then __send__ *meth
-    else             self_eval &meth
+    when Array  then __send__(*meth)
+    else             yield_or_eval(&meth)
     end.chain(*methods, &guard)
   end
 
-  def self_eval &block
+  # yield or eval based on the block arity
+  def yield_or_eval &block
     case block.arity
     # ruby bug for -1
     when 0, -1 then instance_eval(&block)
@@ -20,27 +35,24 @@ module MethodChain
     end
   end
 
-  def then arg=nil, &block
+  # return self if self evaluates to false, otherwise
+  # evaluate the block or return the default argument
+  def then default=nil, &block
     if self
-      block_given? ? (self_eval &block) : (arg || (fail \
+      block_given? ? (yield_or_eval(&block)) : (default || (fail \
         ArgumentError, "#then must be called with an argument or a block"))
     else
       self
     end
   end
 
+  # the inverse of then
   def else arg=nil, &block
     if self
       self
     else
-      block_given? ? (self_eval &block) : (arg || (fail \
+      block_given? ? (yield_or_eval(&block)) : (arg || (fail \
         ArgumentError, "#else must be called with an argument or a bloc"))
     end
-  end
-
-  def tap meth=nil, &block
-    self.send meth if meth
-    self_eval &block if block_given?
-    self
   end
 end

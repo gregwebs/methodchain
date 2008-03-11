@@ -112,6 +112,7 @@ end
 
 desc 'add to version control'
 task :push do
+  p `git diff`.chomp
   unless `git diff`.chomp.empty?
     ARGV.clear
     puts "enter commit message"

@@ -49,7 +49,7 @@ namespace :rcov do
 end
 
 desc "release a new gem to rubyforge"
-task :release => [:test,:rdoc,:push,:website,:package] do
+task :release => [:test,:rdoc,:record,:website,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
     release =~ /^[^-]+-([.0-9]+).gem$/
@@ -110,9 +110,8 @@ namespace :readme do
   end
 end
 
-desc 'add to version control'
-task :push do
-  p `git diff`.chomp
+desc 'git add and push'
+task :record do
   unless `git diff`.chomp.empty?
     ARGV.clear
     puts "enter commit message"

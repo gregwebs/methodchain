@@ -49,7 +49,7 @@ namespace :rcov do
 end
 
 desc "release a new gem to rubyforge"
-task :release => [:test,:rdoc,:commit,:website,:package] do
+task :release => [:test,:rdoc,:push,:website,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
     release =~ /^[^-]+-([.0-9]+).gem$/
@@ -111,12 +111,14 @@ namespace :readme do
 end
 
 desc 'add to version control'
-task :commit do
-  ARGV.clear
-  puts "enter commit message"
-  (puts (run "git commit -a -m #{Kernel.gets}"))
-  puts "committed!. pushing.. "
-  (puts (run 'git push origin master'))
+task :push do
+  unless `git diff`.chomp.empty?
+    ARGV.clear
+    puts "enter commit message"
+    (puts (run "git commit -a -m #{Kernel.gets}"))
+    puts "committed! now pushing.. "
+    (puts (run 'git push origin master'))
+  end
 end
 
 require 'rubygems'

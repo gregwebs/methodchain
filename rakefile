@@ -113,7 +113,9 @@ end
 desc 'add to version control'
 task :commit do
   ARGV.clear
+  puts "enter commit message"
   (puts (run "git commit -a -m #{Kernel.gets}"))
+  puts "committed!. pushing.. "
   (puts (run 'git push origin master'))
 end
 

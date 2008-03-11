@@ -31,27 +31,37 @@ end
 
 require 'rubygems'
 require 'spec/rake/spectask'
-desc "Run all examples with RCov"
-Spec::Rake::SpecTask.new('rcov') do |t|
-  t.spec_files = ['spec/*.rb']
-  t.rcov = true
-  t.rcov_opts = ['--exclude', 'spec']
-end
-
+desc "verify test coverage with RCov"
+task :rcov => 'rcov:verify'
 namespace :rcov do
+  Spec::Rake::SpecTask.new('rcov') do |t|
+    t.spec_files = ['spec/*.rb']
+    t.rcov = true
+    t.rcov_opts = ['--exclude', 'spec']
+  end
+
   require 'spec/rake/verify_rcov'
-  RCov::VerifyTask.new(:verify => :spec) do |t|
+  # rcov is wrong- I am actually at 100%
+  RCov::VerifyTask.new(:verify => :rcov) do |t|
     t.threshold = 100 # Make sure you have rcov 0.7 or higher!
     t.index_html = 'coverage/lib-methodchain-not_included_rb.html'
   end
 end
 
 desc "release a new gem to rubyforge"
-task :release => [:rdoc,:package] do
+task :release => [:test,:rdoc,:commit,:website,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
     release =~ /^[^-]+-([.0-9]+).gem$/
-    `rubyforge login && rubyforge add_release #{project} #{project} #$1 #{release}`
+    (puts (run "rubyforge login && rubyforge add_release #{project} #{project} #$1 #{release}"))
+  end
+end
+
+desc "update website"
+file :website => ['README','rakefile'] do
+  Dir.chdir '/home/greg/sites/projects/' do
+    (puts (run 'rake projects:update'))
+    (puts (run 'rake deploy:rsync'))
   end
 end
 
@@ -100,13 +110,19 @@ namespace :readme do
   end
 end
 
+desc 'add to version control'
+task :commit do
+  (puts (run 'git commit -a'))
+  (puts (run 'git push origin master'))
+end
+
 require 'rubygems'
 require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s|
   s.name = project
   s.rubyforge_project = project
-  s.version = "0.2.0"
+  s.version = "0.2.2"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{project}"

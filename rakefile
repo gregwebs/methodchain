@@ -112,7 +112,8 @@ end
 
 desc 'add to version control'
 task :commit do
-  (puts (run 'git commit -a'))
+  ARGV.clear
+  (puts (run "git commit -a -m #{Kernel.gets}"))
   (puts (run 'git push origin master'))
 end
 

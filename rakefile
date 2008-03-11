@@ -10,6 +10,14 @@ def run command
   res
 end
 def __DIR__; "#{File.dirname(__FILE__)}" end
+
+def cd_tmp
+  Dir.mkdir 'tmp' unless File.directory? 'tmp'
+  Dir.chdir('tmp') do |dir|
+    yield dir
+  end
+  rm_rf 'tmp'
+end
 class IO
   def self.write( file, str )
     self.open( file, 'w' ) { |fh| fh.print str }
@@ -49,7 +57,7 @@ namespace :rcov do
 end
 
 desc "release a new gem to rubyforge"
-task :release => [:test,:rdoc,:record,:website,:package] do
+task :release => [:test,:record,:rdoc,:website,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
     release =~ /^[^-]+-([.0-9]+).gem$/
@@ -90,23 +98,22 @@ namespace :readme do
   desc "run README code through xmp filter"
   task :test do
     # grab example code from README
-    tmpdir = __DIR__ + '/tmp'
-    mkdir tmpdir unless File.directory? tmpdir
-    example_file = "#{File.expand_path(tmpdir)}/example.rb"
+    cd_tmp do
+      example_file = "#{__DIR__}/example.rb"
 
-    File.write(example_file, (
-      File.read("#{__DIR__}/lib/methodchain/not_included.rb") <<
-      "class Object; include MethodChain end\n" <<
-      File.readlines('README').grep(/^  / ).
-        reject {|l| l =~ /^\s*require/ or l.include?('Error')}.
-          join ))
+      File.write(example_file, (
+        File.read("#{__DIR__}/lib/methodchain/not_included.rb") <<
+        "class Object; include MethodChain end\n" <<
+        File.readlines('../README').grep(/^  / ).
+          reject {|l| l =~ /^\s*require/ or l.include?('Error')}.
+            join ))
 
-    command = "ruby ../bin/xmpfilter -c #{example_file}"
-    Dir.chdir '/home/greg/src/head/lib' do
-      run "#{command}"
+      command = "ruby ../bin/xmpfilter -c #{example_file}"
+      Dir.chdir '/home/greg/src/head/lib' do
+        run "#{command}"
+      end
+      puts "README code successfully evaluated"
     end
-    rm_rf 'tmp'
-    puts "README code successfully evaluated"
   end
 end
 

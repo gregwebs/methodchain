@@ -99,13 +99,13 @@ namespace :readme do
   task :test do
     # grab example code from README
     cd_tmp do
-      example_file = "#{__DIR__}/example.rb"
+      example_file = "#{Dir.pwd}/example.rb"
 
       File.write(example_file, (
-        File.read("#{__DIR__}/lib/methodchain/not_included.rb") <<
+        File.read("#{__DIR__}/lib/methodchain/not-included.rb") <<
         "class Object; include MethodChain end\n" <<
         File.readlines('../README').grep(/^  / ).
-          reject {|l| l =~ /^\s*require/ or l.include?('Error')}.
+          reject {|l| l =~ /^\s*require/ or l.include?('Error') or l.include? 'gem install'}.
             join ))
 
       command = "ruby ../bin/xmpfilter -c #{example_file}"
@@ -122,7 +122,7 @@ task :record do
   unless `git diff`.chomp.empty?
     ARGV.clear
     puts "enter commit message"
-    (puts (run "git commit -a -m #{Kernel.gets}"))
+    (puts (run "git commit -a -m '#{Kernel.gets}'"))
     puts "committed! now pushing.. "
     (puts (run 'git push origin master'))
   end
@@ -140,7 +140,9 @@ spec = Gem::Specification.new do |s|
   s.homepage = "http://projects.gregweber.info/#{project}"
   s.platform = Gem::Platform::RUBY
   s.summary = "convenience methods for method chaining"
-  s.files = Dir['./**'] + Dir['*/**']
+  s.files = FileList.new('./**', '*/**') do |fl|
+             fl.exclude('pkg','pkg/*','tmp','tmp/*')
+           end
   s.require_path = "lib"
   s.has_rdoc = true
   s.extra_rdoc_files = ["README"]

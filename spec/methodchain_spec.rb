@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../lib/methodchain'
 
 describe "#chain" do
-  it "should return self when no arguments are given" do
+  it "should return self when no arguments or just a block are given" do
     [nil,'a'].each do |var|
       var.chain.should == var
       var.chain {fail}.should == var
@@ -16,6 +16,12 @@ describe "#chain" do
   end
   it "should send an array as a message with arguments" do
     [['a']].chain(:flatten, lambda{|arr| arr.push('b')}, [:join, ' ']).should == 'a b'
+  end
+  it "should yield self to a block and return self if block has one argument" do
+    [true,false,'a'].each do |o|
+      o.chain {|s| s.should == o }.should == o
+      o.chain {|s| 'foo' }.should == o
+    end
   end
 
   it "should guard the chain against nil and false" do
@@ -39,13 +45,28 @@ describe "#chain" do
 end
 
 describe "#tap" do
-  it "#tap should yield self to a block and return self if block has one argument" do
+  it "should return self when no arguments are given" do
+    [true,false,'a'].each do |o|
+      o.tap.should == o
+    end
+  end
+  it "should send symbols" do
+    [[]].tap(:flatten!).should == []
+  end
+  it "should send an array as a message with arguments" do
+    ['a','b'].tap( [:join, ' '] ).should == ['a','b']
+  end
+  it "should send procs" do
+    [].tap(lambda{|arr| arr.push('a'); 'blah'}).should == ['a']
+    [].tap(lambda{ push('a'); 'blah' }).should == ['a']
+  end
+  it "should yield self to a block and return self if block has one argument" do
     [true,false,'a'].each do |o|
       o.tap {|s| s.should == o }.should == o
       o.tap {|s| not s }.should == o
     end
   end
-  it "#tap should raise an error if a block has more than one argument" do
+  it "should raise an error if a block has more than one argument" do
     [true,false,'a'].each do |o|
       lambda{ o.tap {|s,a|} }.should raise_error(ArgumentError)
       lambda{ o.tap {|s,*args|} }.should raise_error(ArgumentError)

@@ -1,4 +1,3 @@
-require File.dirname(__FILE__) + '/methodchain/not_included'
+require File.dirname(__FILE__) + '/methodchain/not-included'
 
-class Object # :nodoc:
-  include MethodChain end
+class Object; include MethodChain end

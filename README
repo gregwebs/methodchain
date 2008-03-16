@@ -7,20 +7,6 @@ Copyright (c) 2008 Greg Weber, http://gregweber.info
 Licensed under the MIT license
 
 == Examples
-=== ##tap
-if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
-
-==== old way
-  arr = [1]
-  arr.compact! # => nil
-  arr.first # => 1
-
-==== normal ##tap (still valid)
-  [1].tap {|arr| arr.compact!}.first # => 1
-
-==== new ##tap
-  [1].tap(:compact!).first # => 1
-
 === ##then and ##else
 ==== old way
   person = nil
@@ -36,8 +22,8 @@ not a huge savings. But sometimes the person variable is actually a function cal
     # do some expensive database queries
   end
 
-  location = find(:first)
-  @phone = location && location.phone   # => nil
+  person = find(:first)
+  @phone = person && person.phone   # => nil
 
 ==== new way
   @phone = find(:first).then {phone}   # => nil
@@ -48,7 +34,36 @@ We have reduced a line of code and removed a local variable.
   'a'.then('b') #=> 'b'
   nil.then('b').else('c') #=> 'c'
 
+=== ##tap
+if you don't already know about this method, look it up on the net.  The tap included here allows message sending.
+
+==== old way
+  arr = [1]
+  arr.compact! # => nil
+  arr.first # => 1
+
+==== normal ##tap (still valid)
+  [1].tap {|arr| arr.compact!}.first # => 1
+
+==== new ##tap
+  [1].tap(:compact!).first # => 1
+
+==== normal ##tap (still valid)
+  [1].tap {|arr| arr.compact!}.tap {|arr| arr * 2}.first # => 1
+
+==== new ##tap
+  [1].tap( :compact!, [:*, 2] ).first # => 1
+
+You can also pass Procs as arguments
+  [1].tap( :compact!, lambda{|arr| arr * 2} ).first # => 1
+
+
 === ##chain
+chain is like tap, but instead of always returning self, it will return the result of the method call.
+  [1].chain(:first) == [1].first
+
+But there is an important difference- chain guards against certain results (by default it guards against nil and false)
+
 ==== old way
   customer = nil
   customer && customer.order && customer.order.id
@@ -60,7 +75,7 @@ note that this is equivalent to
 
   customer.then {order}.then {id}
 
-=== ##chain - Custom guards, multiple arguments, and procs
+=== ##chain - Custom guards, multiple arguments, and Procs
 ==== old way - guarding against zero
   value = 0
 
@@ -76,7 +91,7 @@ note that this is equivalent to
 ==== new way
   value.chain(:abs, [:*, 20]) {|s| s == 0 }   # => 0
 
-procs can be used, so this is equivalent to
+Procs can be used, so this is equivalent to
   value.chain(:abs, lambda {|n| n * 20 }) {|s| s == 0 } # => 0
 
 == Usage
@@ -88,14 +103,45 @@ procs can be used, so this is equivalent to
 
 === selectively import MethodChain methods
 
-  require 'methodchain/not_included'
+  require 'methodchain/not-included'
 
-not_included will load the MethodChain module without including it anywhere.
-Already have your own version of tap? use the module-import gem to decide what to include
+You can then include methodchain into selected classes, or you can use the module-import gem to include only certain methods
+
+  gem install module-import
+
+  require 'module-import'
+  class Object
+    import MethodChain, :chain  # I only want Object#chain
+  end
+
+import will still load all the private methods from the module:
+- yield_or_eval
+- send_as_function
+- send_arguments_as_functions
+
+
+==== not into Object
+To import nothing into the Object namespace
+  require 'methodchain/no-import'
+
+Then include where needed:
+  class MyObject
+    include MethodChain
+  end
+
 
 == Implementation
-* There are no proxy objects and no use of method_missing- these are simply function calls, so it should be fast.
-* A helper method called yield_or_eval is also exposed.  This method allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
+There are no proxy objects and no use of method_missing- these are simply function calls, so it should be fast.
+
+private methods:
+* yield_or_eval: allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
+* send_as_function: allows symbols and arrays to be sent as messages, and calls yield_or_eval on Proc arguments
+* send_arguments_as_functions:
+
+  def send_arguments_as_functions *methods
+    methods.each {|meth| send_as_function meth}
+    self
+  end
 
 == Install
 gem install methodchain

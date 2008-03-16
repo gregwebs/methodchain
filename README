@@ -117,7 +117,7 @@ You can then include methodchain into selected classes, or you can use the modul
 import will still load all the private methods from the module:
 - yield_or_eval
 - send_as_function
-- send_arguments_as_functions
+- send_as_functions
 
 
 ==== not into Object
@@ -136,10 +136,10 @@ There are no proxy objects and no use of method_missing- these are simply functi
 private methods:
 * yield_or_eval: allows the two different block forms {|p| p.name} and {name}, where the first form yields self and the second form is called using instance_eval.
 * send_as_function: allows symbols and arrays to be sent as messages, and calls yield_or_eval on Proc arguments
-* send_arguments_as_functions:
+* send_as_functions:
 
-  def send_arguments_as_functions *methods
-    methods.each {|meth| send_as_function meth}
+  def send_arguments_as_functions *args
+    args.each {|arg| send_as_function arg}
     self
   end
 

@@ -66,7 +66,7 @@ task :release => [:test,:record,:rdoc,:website,:package] do
 end
 
 desc "update website"
-file :website => ['README','rakefile'] do
+file :website => ['README','Rakefile'] do
   Dir.chdir '/home/greg/sites/projects/' do
     (puts (run 'rake projects:update'))
     (puts (run 'rake deploy:rsync'))
@@ -134,7 +134,7 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
   s.name = project
   s.rubyforge_project = project
-  s.version = "0.2.2"
+  s.version = "0.3.0"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{project}"

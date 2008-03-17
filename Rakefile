@@ -134,15 +134,17 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
   s.name = project
   s.rubyforge_project = project
-  s.version = "0.3.0"
+  s.version = "0.3.1"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{project}"
   s.platform = Gem::Platform::RUBY
   s.summary = "convenience methods for method chaining"
-  s.files = FileList.new('./**', '*/**') do |fl|
-             fl.exclude('pkg','pkg/*','tmp','tmp/*')
+  s.files =
+  FileList.new('./**', '*/**', 'lib/methodchain/*') do |fl|
+             fl.exclude('pkg','pkg/*','tmp','tmp/*', 'coverage', 'coverage/*')
            end
+  p s.files
   s.require_path = "lib"
   s.has_rdoc = true
   s.extra_rdoc_files = ["README"]

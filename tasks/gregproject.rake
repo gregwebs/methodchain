@@ -40,11 +40,23 @@ file :website => ['README','Rakefile'] do
     out 'rake --silent deploy:rsync'
   end
 end
+  
+require 'rake/rdoctask'
 
-desc "generate documentation"
-task :rdoc do
-  fail unless system 'rdoc --force-update --quiet README lib/*'
-end
+Rake::RDocTask.new do |rd|  
+   
+     rd.main = "README"  
+   
+     rd.rdoc_dir = "doc"
+   
+     rd.rdoc_files.include("README", "lib/**/*.rb")  
+   
+     rd.title = "#$project rdoc"  
+   
+     rd.options << '-S' # inline source  
+   
+     rd.template = `allison --path`.chomp + '.rb'  
+ end
 
 desc 'git add and push'
 task :record do

@@ -12,7 +12,7 @@ namespace :readme do
   desc "create html for website using coderay, use --silent option"
   task :html do
     rm_rf 'doc'
-    `rdoc --quiet README`
+    `rdoc --quiet --style rdoc.css README`
     require 'hpricot'
     require 'htmlentities'
     doc = open( 'doc/files/README.html' ) { |f| Hpricot(f) }

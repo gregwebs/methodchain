@@ -1,5 +1,8 @@
 require File.dirname(__FILE__) + '/../lib/methodchain'
 
+#TODO
+# test message sending with #and and #or
+
 describe "#chain" do
   it "should return self when no arguments or just a block are given" do
     [nil,'a'].each do |var|
@@ -88,30 +91,76 @@ describe "#tap" do
   end
 end
 
+describe "Object#and" do
+  it "should return self or a value that evaluates to false" do
+    [true,'testing'].each do |val|
+      val.and {false}.should == false
+      val.and {'a'}.should == val
+    end
+    [false,nil].each do |val|
+      val.and {false}.should == val
+      val.and {nil}.should == val
+      val.and {true}.should == val
+    end
+  end
+end
+
+describe "Object#or" do
+  it "should return self or a value that evaluates to false" do
+    [true,'testing'].each do |val|
+      val.or {false}.should == val
+      val.or {'a'}.should == val
+    end
+    [false,nil].each do |val|
+      val.or {false}.should == false
+      val.or {nil}.should == nil
+      val.or {true}.should == true
+    end
+  end
+end
 def test_then_else *vals
   bool = !!vals.first
   same,opp = bool ? [:then,:else] : [:else,:then]
 
-  it "should return self if self evaluates to #{!bool}" do
+  it "should return self if no conditions are given and self evaluates to #{!bool}" do
     vals.each do |val|
       val.send(opp).should == val
-      val.send(opp,'aye').should == val
-      val.send(opp,'aye') {|a,b,c| a}.should == val
       val.send(opp) {|a,b,c| a}.should == val
+    end
+  end
+
+  it "should return self if no block is given" do
+    vals.each do |val|
+      val.send(same, proc{self}).should == val
+      val.send(same, proc{not self}).should == val
+      val.send(opp, proc{self}).should == val
+      val.send(opp, proc{not self}).should == val
+
+      lambda{val.send(same, proc{fail})}.should raise_error
+      lambda{val.send(opp, proc{fail})}.should raise_error
     end
   end
 
   it "if self evaluates to #{bool} ##{same} should yield self to a block if one is given, and return that block's value" do
     vals.each do |val|
       val.send(same)   {|v| v.should == val; 'foo'}.should == 'foo'
-      val.send(same,1) {|v| v.should == val; 'foo'}.should == 'foo'
     end
   end
 
-  it "should validate arguments if self evaluates to #{bool}" do
-    vals.each {|val| lambda{val.send(same)}.should raise_error(ArgumentError)}
-    vals.each {|val| lambda{val.send(same){|a,b|}}.should raise_error(ArgumentError)}
-    vals.each {|val| lambda{val.send(same){|a,*b|}}.should raise_error(ArgumentError)}
+  it "if self evaluates to #{!bool} ##{opp} should yield self to a block if one is given, and return that block's value" do
+    vals.each do |val|
+      val.send(opp) {|v| v.should == val; 'foo'}.should == val
+    end
+  end
+
+  it "should test conditions" do
+    vals.each do |val|
+      val.send(same, proc{self}) {"test"}.should == "test"
+      val.send(same, proc{not self}) {fail}.should == val
+
+      val.send(opp, proc{self}) {fail}.should == val
+      val.send(opp, proc{not self}) {"test"}.should == "test"
+    end
   end
 end
 

@@ -89,7 +89,7 @@ namespace :readme do
     doc.at('#description').search('pre').each do |ex|
       #select {|elem| elem.inner_html =~ /class |module /}.each do |ex|
       # add coderay and undo what rdoc has done in the example code
-      ex.swap("<coderay lang='ruby'>#{ex.inner_html.gsub('&quot;', '"').gsub('&gt;','>')}</coderay>")
+      ex.swap("<coderay lang='ruby'>#{ex.inner_html.gsub('&quot;', '"').gsub('&gt;','>').gsub('&lt;', '<')}</coderay>")
     end
     puts doc.at('#description').to_html
   end
@@ -134,7 +134,7 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
   s.name = project
   s.rubyforge_project = project
-  s.version = "0.3.1"
+  s.version = "0.4.0"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{project}"

@@ -48,24 +48,59 @@ public
     (send_as_function (messages.shift)).chain(*messages, &guard)
   end
 
-  # return self if self evaluates to false, otherwise
-  # evaluate the block or return the default argument
-  def then default=nil, &block
-    if self
-      block_given? ? (yield_or_eval(&block)) : (default || (fail \
-        ArgumentError, "#then must be called with an argument or a block"))
+  # return self if self or a guard evaluates to false,
+  # otherwise return the evaluation of the block
+  def then *guards, &block
+    if guards.empty? 
+      return self if not self
     else
-      self
+      guards.each do |cond|
+        return self if not send_as_function(cond)
+      end
     end
+
+    block_given? ? yield_or_eval(&block) : self
   end
 
-  # the inverse of then
-  def else arg=nil, &block
-    if self
-      self
+  # return self if self or a guard evaluates to true
+  # otherwise return the evaluation of the block
+  def else *guards, &block
+    if guards.empty? 
+      return self if self
     else
-      block_given? ? (yield_or_eval(&block)) : (arg || (fail \
-        ArgumentError, "#else must be called with an argument or a bloc"))
+      guards.each do |cond|
+        return self if send_as_function(cond)
+      end
     end
+
+    block_given? ? yield_or_eval(&block) : self
+  end
+
+  # with no guards, is equivalent to self && yield_or_eval(&block) && self
+  # same as: <tt>self.then(*guards, &block) && self</tt>
+  def and *guards, &block
+    if guards.empty? 
+      return self if not self
+    else
+      guards.each do |cond|
+        return self if not send_as_function(cond)
+      end
+    end
+
+    block_given? ? (yield_or_eval(&block) && self) : self
+  end
+
+  # with no guards, is equivalent to <tt>self || (yield_or_eval(&block) && self)</tt>
+  # same as: <tt>self.else(*guards, &block) && self</tt>
+  def or *guards, &block
+    if guards.empty? 
+      return self if self
+    else
+      guards.each do |cond|
+        return self if send_as_function(cond)
+      end
+    end
+
+    block_given? ? yield_or_eval(&block) : self
   end
 end

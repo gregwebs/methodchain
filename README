@@ -1,5 +1,5 @@
 == Summary
-methodchain - ruby helpers for method chaining: chain, tap, then, else
+methodchain - ruby helpers for method chaining: chain, tap, then, else, and, or
 Easy ways to navigate around nil without creating local variables.
 
 == Author and License
@@ -14,6 +14,8 @@ Licensed under the MIT license
 
 ==== new way
   name = person.then {|p| p.name}
+  # or
+  name = person.then {name}
 
 not a huge savings. But sometimes the person variable is actually a function call, and then we must save it in a variable first.
 
@@ -29,10 +31,36 @@ not a huge savings. But sometimes the person variable is actually a function cal
   @phone = find(:first).then {phone}   # => nil
   
 We have reduced a line of code and removed a local variable.
-#then and #else can return a default value instead of evaluating a block
+##else is the opposite of #then, and the two methods can be used together
 
-  'a'.then('b') #=> 'b'
-  nil.then('b').else('c') #=> 'c'
+  'a'.then{'b'} #=> 'b'
+  nil.then{'b'}.else{'c'} #=> 'c'
+
+==== message sending
+The normal conditional for ##then and ##else is self
+
+  if self # inside MethodChain#then
+    # evaluate block
+  end
+
+##then and ##else allow message sending as the conditional.  See more examples of message sending with the MethodChain#chain examples below
+
+  "not empty".then(:empty?) {"N/A"} # => "not empty"
+           "".then(:empty?) {"N/A"} # => "N/A"
+
+=== ##and, ##or
+==== old way
+Return a default value or the original value depending on whether multiple conditions are met
+  Person = Struct.new(:phone )
+  blank = Person.new('') # or {:phone => nil}
+  blank.phone && (not blank.phone.empty?) ? blank.phone : "N/A" # => "N/A"
+  p = Person.new('123')
+  p.phone && (not p.phone.empty?) ? p.phone : "N/A" # => "123"
+
+==== new way
+  blank.phone.and {not empty?} || "N/A" # => "N/A"
+  p.phone.and {not empty?} || "N/A" # => "123"
+
 
 === ##tap
 if you don't already know about this method, look it up on the net.  The tap included here allows message sending.

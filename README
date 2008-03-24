@@ -3,9 +3,8 @@ methodchain - ruby helpers for method chaining: chain, tap, then, else, and, or
 ===
 Easy ways to navigate around nil without creating local variables.
 ===
-<a href="http://blog.thoughtfolder.com/2008-03-16-navigating-nil-method-chaining-in-ruby.html#Object-chain">
-Initial blog post describing previous ideas
-</a>
+Initial blog post describing previous ideas:
+http://blog.thoughtfolder.com/2008-03-16-navigating-nil-method-chaining-in-ruby.html
 
 == Author and License
 Copyright (c) 2008 Greg Weber, http://gregweber.info

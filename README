@@ -1,6 +1,11 @@
 == Summary
 methodchain - ruby helpers for method chaining: chain, tap, then, else, and, or
+===
 Easy ways to navigate around nil without creating local variables.
+===
+<a href="http://blog.thoughtfolder.com/2008-03-16-navigating-nil-method-chaining-in-ruby.html#Object-chain">
+Initial blog post describing previous ideas
+</a>
 
 == Author and License
 Copyright (c) 2008 Greg Weber, http://gregweber.info
@@ -146,16 +151,6 @@ import will still load all the private methods from the module:
 - yield_or_eval
 - send_as_function
 - send_as_functions
-
-
-==== not into Object
-To import nothing into the Object namespace
-  require 'methodchain/no-import'
-
-Then include where needed:
-  class MyObject
-    include MethodChain
-  end
 
 
 == Implementation

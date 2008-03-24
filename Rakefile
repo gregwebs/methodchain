@@ -14,13 +14,13 @@ namespace :readme do
     rm_rf 'doc'
     `rdoc --quiet README`
     require 'hpricot'
+    require 'htmlentities'
     doc = open( 'doc/files/README.html' ) { |f| Hpricot(f) }
     # find example code
     doc.at('#description').search('pre').each do |ex|
-      html = ex.inner_html.gsub('&quot;', '"').gsub('&gt;','>').gsub('&lt;', '<').gsub('&amp;','&')
       #select {|elem| elem.inner_html =~ /class |module /}.each do |ex|
       # add coderay and undo what rdoc has done in the example code
-      ex.swap("<coderay lang='ruby'>#{html}</coderay>")
+      ex.swap("<coderay lang='ruby'>#{HTMLEntities.new.decode ex.inner_html}</coderay>")
     end
     puts doc.at('#description').to_html
   end
@@ -54,7 +54,7 @@ require 'rake/gempackagetask'
 spec = Gem::Specification.new do |s|
   s.name = $project
   s.rubyforge_project = $project
-  s.version = "0.4.0"
+  s.version = "0.4.1"
   s.author = "Greg Weber"
   s.email = "greg@gregweber.info"
   s.homepage = "http://projects.gregweber.info/#{$project}"
@@ -62,7 +62,7 @@ spec = Gem::Specification.new do |s|
   s.summary = "convenience methods for method chaining"
   s.files =
   FileList.new('./**', '*/**', 'lib/methodchain/*') do |fl|
-    fl.exclude('pkg','pkg/*','tmp','tmp/*', 'tasks','tasks/*','coverage', 'coverage/*')
+    fl.exclude('pkg','pkg/*','tmp','tmp/*', 'coverage', 'coverage/*')
   end
   s.require_path = "lib"
   s.has_rdoc = true

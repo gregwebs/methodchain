@@ -4,7 +4,12 @@ def exit_msg(msg, code=1)
 end
 def run command
   res = `#{command}`
-  exit_msg res, $?.exitstatus if $?.exitstatus != 0
+  if $?.exitstatus != 0
+    exit_msg(
+      "\nfailure on command:\n  #{command.chomp}\nresult:\n  #{res}\n",
+      $?.exitstatus
+    )
+  end
   res
 end
 def out command

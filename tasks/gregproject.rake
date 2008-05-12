@@ -24,7 +24,7 @@ namespace :rcov do
   end
 end
 
-desc "release a new gem to rubyforge"
+desc "create a new gem release"
 task :release => [:test,:record,:rdoc,:website,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
@@ -44,23 +44,18 @@ end
 require 'rake/rdoctask'
 
 Rake::RDocTask.new do |rd|  
-   
-     rd.main = "README"  
-   
-     rd.rdoc_dir = "doc"
-   
-     rd.rdoc_files.include("README", "lib/**/*.rb")  
-   
-     rd.title = "#$project rdoc"  
-   
-     rd.options << '-S' # inline source  
-   
-     rd.template = `allison --path`.chomp + '.rb'  
+   rd.main = "README"  
+   rd.rdoc_dir = "doc"
+   rd.rdoc_files.include("README", "lib/**/*.rb")  
+   rd.title = "#$project rdoc"  
+   rd.options << '-S' # inline source  
+   rd.template = `allison --path`.chomp + '.rb'  
  end
 
 desc 'git add and push'
 task :record do
-  unless `git diff`.chomp.empty?
+  unless `git status`.split($/).last =~ /nothing added/
+    puts `git diff`
     ARGV.clear
     puts "enter commit message"
     out "git commit -a -m '#{Kernel.gets}'"
@@ -68,4 +63,3 @@ task :record do
     out 'git push origin master'
   end
 end
-

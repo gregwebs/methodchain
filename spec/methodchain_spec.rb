@@ -1,35 +1,37 @@
-require File.dirname(__FILE__) + '/../lib/methodchain'
+__DIR__ = File.dirname(__FILE__)
+require __DIR__ + '/match_each'
+require __DIR__ + '/../lib/methodchain'
 
 #TODO
 # test message sending with #and and #or using shared_examples_for
 
 class Object; def return_nil() nil end end
 
-shared_examples_for "self-returning method" do
+shared_examples_for "method that returns self when no non-block paramaters are given" do
   it 'should returns self when no arguments are given' do
-    @objects.each { |obj| obj.send(@meth).should == obj }
+    @objects.each {|obj| obj.send(@meth).should == obj }
   end
 
   it 'should returns self when a block with no arguments is given' do
-    @objects.each { |obj| obj.send(@meth) {}.should == obj }
+    @objects.each {|obj| obj.send(@meth) {}.should == obj }
   end
 
   it 'should return self when a block with one argument is given' do
-    @objects.each { |obj| obj.send(@meth) {|_|}.should == obj }
+    @objects.each {|obj| obj.send(@meth) {|_|}.should == obj }
   end
 end
 
 
 describe 'any object' do
   before do
-    @trues = [true,'a']
+    @trues = [true,'a',1]
     @falses = [false,nil]
     @objects = @trues + @falses
   end
 
   describe "#chain" do
     before { @meth = :chain }
-    it_should_behave_like "self-returning method"
+    it_should_behave_like "method that returns self when no non-block paramaters are given"
 
     it "should not evaluate a block when just a block is given" do
       @objects.each { |obj| obj.chain {fail}.should == obj }
@@ -42,12 +44,12 @@ describe 'any object' do
 
     it "should send procs" do
       @trues.should  each {|obj| obj.chain(lambda{|o| o.class}).should == obj.class }
-      @falses.should  each {|obj| obj.chain(lambda{|o| o.class}).should == obj }
+      @falses.should each {|obj| obj.chain(lambda{|o| o.class}).should == obj }
     end
 
     it "should send an array as a message with arguments" do
-      @trues.should  each {|obj| obj.chain([:class]).should == obj.class }
-      @falses.should each {|obj| obj.chain([:class]).should == obj }
+      @trues.should  each {|obj| obj.chain([:class], :to_s).should == obj.class.to_s }
+      @falses.should each {|obj| obj.chain([:class], :to_s).should == obj }
     end
 
     it "should yield self to a block and return self if block has one argument" do
@@ -71,7 +73,7 @@ describe 'any object' do
 
   describe "#tap" do
     before { @meth = :tap }
-    it_should_behave_like "self-returning method"
+    it_should_behave_like "method that returns self when no non-block paramaters are given"
 
     it "should yield self to a block and return self if block has one argument" do
       @objects.should( each do |o|
@@ -138,7 +140,7 @@ describe "#tap" do
     [].tap(lambda{ push('a'); 'blah' }).should == ['a']
   end
   it "#tap should send a method to itself" do
-    [1, 2, 3, 4, 5].tap { |arr| arr.pop }.should == [1, 2, 3, 4]
+    [1, 2, 3, 4, 5].tap {|arr| arr.pop }.should == [1, 2, 3, 4]
     [1, 2, 3, 4, 5].tap(:pop).should == [1, 2, 3, 4]
     [1, 2, 3, 4, 5].tap(:pop) {|arr| arr.pop}.should == [1, 2, 3]
   end
@@ -148,7 +150,7 @@ describe "#tap" do
 end
 
 
-shared_examples_for 'then/else' do
+shared_examples_for 'then/else and/or' do
   it "should return self if no conditions are given and self evaluates to #{!@bool}" do
     @vals.should( each do |val|
       val.send(@opp).should == val
@@ -168,15 +170,18 @@ shared_examples_for 'then/else' do
     end )
   end
 
-  it "if self evaluates to #{@bool} ##{@same} should yield self to a block if one is given, and return that block's value" do
-    @vals.should( each do |val|
-      val.send(@same)   {|v| v.should == val; 'foo'}.should == 'foo'
-    end )
-  end
-
   it "if self evaluates to #{!@bool} ##{@opp} should yield self to a block if one is given, and return that block's value" do
     @vals.should( each do |val|
       val.send(@opp) {|v| v.should == val; 'foo'}.should == val
+    end )
+  end
+end
+
+
+shared_examples_for 'then/else' do
+  it "if self evaluates to #{@bool} ##{@same} should yield self to a block if one is given, and return that block's value" do
+    @vals.should( each do |val|
+      val.send(@same)   {|v| v.should == val; 'foo'}.should == 'foo'
     end )
   end
 
@@ -193,21 +198,50 @@ end
 
 
 describe 'true values' do
-  it_should_behave_like 'then/else'
-
   before do
-    @vals = ['a',true]
+    @vals = @trues = ['a',true]
     @bool = !!@vals.first
-    @same, @opp = @bool ? [:then,:else] : [:else,:then]
+  end
+
+  describe 'then/else' do
+    it_should_behave_like 'then/else and/or'
+    it_should_behave_like 'then/else'
+
+    before do
+      @same, @opp = @bool ? [:then,:else] : [:else,:then]
+    end
+  end
+
+  describe 'and/or' do
+    it_should_behave_like 'then/else and/or'
+
+    before do
+      @same, @opp = @bool ? [:and,:or] : [:or,:and]
+    end
   end
 end
 
-describe 'false values' do
-  it_should_behave_like 'then/else'
 
+describe 'false values' do
   before do
-    @vals = [nil,false]
+    @vals = @falses = [nil,false]
     @bool = !!@vals.first
-    @same, @opp = @bool ? [:then,:else] : [:else,:then]
+  end
+
+  describe 'then/else' do
+    it_should_behave_like 'then/else and/or'
+    it_should_behave_like 'then/else'
+
+    before do
+      @same, @opp = @bool ? [:then,:else] : [:else,:then]
+    end
+  end
+
+  describe 'and/or' do
+    it_should_behave_like 'then/else and/or'
+
+    before do
+      @same, @opp = @bool ? [:and,:or] : [:or,:and]
+    end
   end
 end

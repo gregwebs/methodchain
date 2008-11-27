@@ -17,7 +17,6 @@ namespace :rcov do
   end
 
   require 'spec/rake/verify_rcov'
-  # rcov is wrong- I am actually at 100%
   RCov::VerifyTask.new(:verify => :rcov) do |t|
     t.threshold = 100 # Make sure you have rcov 0.7 or higher!
     t.index_html = $rcov_index_html
@@ -25,7 +24,7 @@ namespace :rcov do
 end
 
 desc "create a new gem release"
-task :release => [:test,:record,:rdoc,:website,:package] do
+task :release => [:test,:record,:rdoc,:website,:gem_specification,:package] do
   Dir.chdir('pkg') do
     release = Dir['*.gem'].sort_by {|file| File.mtime(file)}.last
     release =~ /^[^-]+-([.0-9]+).gem$/
